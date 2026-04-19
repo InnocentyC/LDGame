@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: M_EchoWaveSector
-  m_Shader: {fileID: 4800000, guid: e260cfa7296ee7642b167f1eb5be5023, type: 3}
+  m_Shader: {fileID: 4800000, guid: 0a8850485bf883c43a1fa9262e9d8bf2, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -41,9 +41,22 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _AngleDeg: 60
+    - _ArcLineAlpha: 1.2
+    - _ArcLineWidth: 0.18
+    - _EdgeAlphaMin: 0.85
+    - _EdgeSoftDeg: 3
     - _EnableExternalAlpha: 0
+    - _FrontWidth: 0.3
+    - _GlobalAlpha: 1
+    - _Progress: 0
+    - _Radius: 5
+    - _TrailAlpha: 0.25
+    - _TrailWidth: 1.2
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _Flip: {r: 1, g: 1, b: 1, a: 1}
+    - _ForwardWS: {r: 1, g: 0, b: 0, a: 0}
+    - _OriginWS: {r: 0, g: 0, b: 0, a: 0}
     - _RendererColor: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []
