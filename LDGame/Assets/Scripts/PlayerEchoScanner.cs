@@ -3,40 +3,37 @@ using UnityEngine;
 
 public class PlayerEchoScanner : MonoBehaviour
 {
-    [Header("Input")] // 发射扫描的按键
+    [Header("Input")]
     public KeyCode scanKey = KeyCode.Space;
 
-    [Header("Direction")] // 设置初始默认方向
-    public bool useTransformRightAsForward = true;
-
-    [Header("Reveal Sector")]// 扫描波范围和宽度（角度）
+    [Header("Reveal Sector")]
     [Min(0.1f)] public float sectorRadius = 5f;
     [Range(1f, 180f)] public float sectorAngleDeg = 60f;
 
-    [Header("Reveal Timing")]// 扫描持续时间和暗淡时间
+    [Header("Reveal Timing")]
     [Min(0f)] public float holdTime = 2f;
     [Min(0.01f)] public float fadeTime = 1f;
 
-    [Header("Reveal Edge Soft")]// 扫描边界模糊
+    [Header("Reveal Edge Soft")]
     [Range(0f, 20f)] public float edgeSoftDeg = 3f;
     [Range(0f, 1f)] public float edgeAlphaMin = 0.85f;
 
-    [Header("Reveal History")]// 同时存在的扫描区域上限
+    [Header("Reveal History")]
     [Range(1, 16)] public int maxScans = 8;
 
-    [Header("Wave VFX Prefab")] // 扫描波视觉效果
+    [Header("Wave VFX Prefab")]
     public EchoWaveVFXController waveVFXPrefab;
     public Transform waveSpawnRoot;
     public int waveSortingOrder = 20;
 
-    [Header("Wave VFX Settings")]// 扫描宽度强度视觉效果
+    [Header("Wave VFX Settings")]
     [Min(0.01f)] public float waveDuration = 0.6f;
     [Min(0.01f)] public float waveFrontWidth = 0.35f;
     [Min(0f)] public float waveTrailWidth = 1.2f;
     [Range(0f, 1f)] public float waveTrailAlpha = 0.25f;
     [Range(0f, 1f)] public float waveStartAlpha = 1f;
     
-    [Header("Wave Arc Look")]// 扫描弧度视觉效果
+    [Header("Wave Arc Look")]
     public float waveArcLineWidth = 0.18f;
     [Range(0f, 2f)] public float waveArcLineAlpha = 1.2f;
 
@@ -96,12 +93,16 @@ public class PlayerEchoScanner : MonoBehaviour
 
     private Vector2 GetCurrentForward()
     {
-        Vector2 fwd = useTransformRightAsForward ? (Vector2)transform.right : (Vector2)transform.up;
+        // 优先使用 PlayerMovement2D 的瞄准方向
+        PlayerMovement2D player = GetComponent<PlayerMovement2D>();
+        if (player != null)
+        {
+            Vector2 aimDir = player.GetAimDirection();
+            if (aimDir.sqrMagnitude > 0.0001f)
+                return aimDir;
+        }
 
-        if (fwd.sqrMagnitude < 0.0001f)
-            fwd = Vector2.right;
-
-        return fwd.normalized;
+        return Vector2.up;
     }
 
     private void SpawnWaveVFX(Vector2 origin, Vector2 forward)
@@ -122,7 +123,6 @@ public class PlayerEchoScanner : MonoBehaviour
             sr.sortingOrder = waveSortingOrder;
         }
 
-        float waveRadius = sectorRadius * 5f;
         vfx.Init(
             sectorRadius,
             sectorAngleDeg,
@@ -133,8 +133,8 @@ public class PlayerEchoScanner : MonoBehaviour
             edgeSoftDeg,
             edgeAlphaMin,
             waveArcLineWidth,
-        waveArcLineAlpha,
-        waveStartAlpha
+            waveArcLineAlpha,
+            waveStartAlpha
         );
     }
 
