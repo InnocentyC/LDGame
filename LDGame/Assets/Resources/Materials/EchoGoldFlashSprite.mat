@@ -42,14 +42,14 @@ Material:
     m_Ints: []
     m_Floats:
     - _BaseKeep: 0.85
-    - _BlinkFrequency: 8
-    - _BlinkMin: 0.25
+    - _BlinkFrequency: 3.9
+    - _BlinkMin: 0.012
     - _EnableExternalAlpha: 0
-    - _FlashAmount: 0
-    - _FlashStrength: 1.2
+    - _FlashAmount: 0.46
+    - _FlashStrength: 3
     m_Colors:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
-    - _FlashColor: {r: 1, g: 0.8399999, b: 0.19999996, a: 1}
+    - _FlashColor: {r: 1, g: 1, b: 1, a: 1}
     - _Flip: {r: 1, g: 1, b: 1, a: 1}
     - _RendererColor: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []
