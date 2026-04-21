@@ -1,4 +1,7 @@
+using System.Collections;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 /// <summary>
 /// 门类型
@@ -7,7 +10,7 @@ public enum DoorType
 {
     [Tooltip("普通门：钥匙开门后渐出消失")]
     Normal,
-    [Tooltip("通关门：通关所需的门，不会消失")]
+    [Tooltip("通关门：钥匙开门后黑幕渐暗并切换场景")]
     Victory
 }
 
@@ -30,12 +33,25 @@ public class Door : MonoBehaviour, IInteractable
     [Tooltip("门类型：普通门/通关门")]
     public DoorType doorType = DoorType.Normal;
 
-    [Header("渐出设置（仅普通门生效）")]
+    [Header("普通门渐出设置（仅 Normal 生效）")]
     [Tooltip("开门后停留延迟（秒）")]
     public float fadeDelay = 0.5f;
 
     [Tooltip("渐出时长（秒）")]
     public float fadeDuration = 0.5f;
+
+    [Header("通关门设置（仅 Victory 生效）")]
+    [Tooltip("要跳转到的场景名（需已加入 Build Settings）")]
+    public string nextSceneName = "";
+
+    [Tooltip("全屏黑幕遮罩 Image（建议放在 Canvas 最上层）")]
+    public Image sceneFadeMask;
+
+    [Tooltip("黑幕渐暗时长（秒）")]
+    public float sceneFadeDuration = 1.2f;
+
+    [Tooltip("完全变黑后，切场景前额外等待时间（秒）")]
+    public float sceneLoadDelay = 0.2f;
 
     [Header("门状态")]
     [Tooltip("门是否已打开")]
@@ -48,6 +64,7 @@ public class Door : MonoBehaviour, IInteractable
 
     private float fadeStartTime = -1f;
     private bool isFading = false;
+    private bool isTransitioning = false;
     private Color originalColor;
 
     public string InteractionPrompt
@@ -55,7 +72,12 @@ public class Door : MonoBehaviour, IInteractable
         get
         {
             if (isOpen)
+            {
+                if (doorType == DoorType.Victory)
+                    return "[F] 门已开启";
                 return "[F] 门已开启";
+            }
+
             return PlayerInteraction.Instance != null &&
                    PlayerInteraction.Instance.HasKey(requiredKeyId)
                    ? $"[F] 开锁 ({requiredKeyId})"
@@ -63,7 +85,7 @@ public class Door : MonoBehaviour, IInteractable
         }
     }
 
-    public bool CanInteract() => !isOpen;
+    public bool CanInteract() => !isOpen && !isTransitioning;
     public DoorType GetDoorType() => doorType;
 
     void Awake()
@@ -73,6 +95,16 @@ public class Door : MonoBehaviour, IInteractable
 
         if (spriteRenderer != null)
             originalColor = spriteRenderer.color;
+
+        // 初始化黑幕为透明
+        if (sceneFadeMask != null)
+        {
+            Color c = sceneFadeMask.color;
+            c.a = 0f;
+            sceneFadeMask.color = c;
+            sceneFadeMask.raycastTarget = false;
+            sceneFadeMask.gameObject.SetActive(true);
+        }
 
         UpdateVisual();
     }
@@ -86,11 +118,9 @@ public class Door : MonoBehaviour, IInteractable
 
         if (elapsed >= fadeDelay)
         {
-            // 计算渐出进度
             float fadeProgress = (elapsed - fadeDelay) / fadeDuration;
             fadeProgress = Mathf.Clamp01(fadeProgress);
 
-            // 应用透明度
             if (spriteRenderer != null)
             {
                 Color color = originalColor;
@@ -98,7 +128,6 @@ public class Door : MonoBehaviour, IInteractable
                 spriteRenderer.color = color;
             }
 
-            // 渐出完成，销毁
             if (fadeProgress >= 1f)
             {
                 if (debugMode)
@@ -111,9 +140,9 @@ public class Door : MonoBehaviour, IInteractable
 
     public void Interact()
     {
-        if (isOpen) return;
+        if (isOpen || isTransitioning)
+            return;
 
-        // 检查玩家是否有钥匙
         if (PlayerInteraction.Instance != null &&
             PlayerInteraction.Instance.HasKey(requiredKeyId))
         {
@@ -131,20 +160,20 @@ public class Door : MonoBehaviour, IInteractable
         if (debugMode)
             Debug.Log($"[Door] {name} 开门！消耗钥匙: {requiredKeyId}", this);
 
-        // 消耗钥匙
         PlayerInteraction.Instance?.ConsumeKey(requiredKeyId);
 
-        // 切换立绘
         isOpen = true;
         UpdateVisual();
 
-        // 通知游戏系统门已打开
         GameEvents.OnDoorOpened?.Invoke(this);
 
-        // 普通门开始渐出
         if (doorType == DoorType.Normal)
         {
             StartFadeOut();
+        }
+        else if (doorType == DoorType.Victory)
+        {
+            StartVictoryTransition();
         }
     }
 
@@ -152,9 +181,9 @@ public class Door : MonoBehaviour, IInteractable
     {
         if (fadeDuration <= 0f)
         {
-            // 直接销毁
             if (debugMode)
                 Debug.Log($"[Door] {name} 直接消失（fadeDuration=0）", this);
+
             Destroy(gameObject);
             return;
         }
@@ -163,7 +192,56 @@ public class Door : MonoBehaviour, IInteractable
         isFading = true;
 
         if (debugMode)
-            Debug.Log($"[Door] {name} 开始渐出：延迟{fadeDelay}秒，时长{fadeDuration}秒", this);
+            Debug.Log($"[Door] {name} 开始渐出：延迟 {fadeDelay} 秒，时长 {fadeDuration} 秒", this);
+    }
+
+    private void StartVictoryTransition()
+    {
+        if (isTransitioning)
+            return;
+
+        isTransitioning = true;
+        StartCoroutine(VictoryTransitionRoutine());
+    }
+
+    private IEnumerator VictoryTransitionRoutine()
+    {
+        if (string.IsNullOrWhiteSpace(nextSceneName))
+        {
+            Debug.LogError($"[Door] {name} 的 Victory 门没有填写 nextSceneName！", this);
+            yield break;
+        }
+
+        if (sceneFadeMask == null)
+        {
+            Debug.LogError($"[Door] {name} 的 Victory 门没有指定 sceneFadeMask！", this);
+            yield break;
+        }
+
+        if (debugMode)
+            Debug.Log($"[Door] {name} 开始通关过场，准备进入场景：{nextSceneName}", this);
+
+        float timer = 0f;
+        Color c = sceneFadeMask.color;
+
+        while (timer < sceneFadeDuration)
+        {
+            timer += Time.deltaTime;
+            float t = Mathf.Clamp01(timer / sceneFadeDuration);
+
+            c.a = t;
+            sceneFadeMask.color = c;
+
+            yield return null;
+        }
+
+        c.a = 1f;
+        sceneFadeMask.color = c;
+
+        if (sceneLoadDelay > 0f)
+            yield return new WaitForSeconds(sceneLoadDelay);
+
+        SceneManager.LoadScene(nextSceneName);
     }
 
     private void UpdateVisual()

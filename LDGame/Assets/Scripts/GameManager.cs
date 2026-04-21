@@ -9,8 +9,6 @@ public class GameManager : MonoBehaviour
     public static GameManager Instance { get; private set; }
 
     [Header("场景名称")]
-    public string startSceneName = "StartScene";
-    public string tutorialSceneName = "TutorialLevel";
     public string level1SceneName = "Level1";
     public string level2SceneName = "Level2";
 
@@ -96,19 +94,11 @@ public class GameManager : MonoBehaviour
     }
 
     /// <summary>
-    /// 加载开始场景
+    /// 开始游戏（直接进入第一关）
     /// </summary>
-    public void LoadStartScene()
+    public void StartGame()
     {
-        LoadScene(startSceneName);
-    }
-
-    /// <summary>
-    /// 加载教学关
-    /// </summary>
-    public void LoadTutorialScene()
-    {
-        LoadScene(tutorialSceneName);
+        LoadLevel1();
     }
 
     /// <summary>
@@ -154,22 +144,6 @@ public class GameManager : MonoBehaviour
     public string GetCurrentSceneName()
     {
         return SceneManager.GetActiveScene().name;
-    }
-
-    /// <summary>
-    /// 检查是否为开始场景
-    /// </summary>
-    public bool IsStartScene()
-    {
-        return SceneManager.GetActiveScene().name == startSceneName;
-    }
-
-    /// <summary>
-    /// 检查是否为教程关
-    /// </summary>
-    public bool IsTutorialScene()
-    {
-        return SceneManager.GetActiveScene().name == tutorialSceneName;
     }
 
     /// <summary>
