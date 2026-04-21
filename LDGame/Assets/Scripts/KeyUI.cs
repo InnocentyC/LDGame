@@ -11,6 +11,7 @@ public class KeyUI : MonoBehaviour
     [SerializeField] private GameObject Key02;
     [SerializeField] private GameObject Key03;
 
+
     private void Awake()
     {
         Instance = this;

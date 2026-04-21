@@ -37,6 +37,8 @@ public class PlayerEchoScanner : MonoBehaviour
     public float waveArcLineWidth = 0.18f;
     [Range(0f, 2f)] public float waveArcLineAlpha = 1.2f;
 
+    public AudioSource scanPlayer;
+
     private struct ScanEvent
     {
         public Vector2 origin;
@@ -89,6 +91,9 @@ public class PlayerEchoScanner : MonoBehaviour
             scans.RemoveAt(0);
 
         SpawnWaveVFX(origin, forward);
+
+        if(scanPlayer != null && scanPlayer.clip != null)
+        scanPlayer.PlayOneShot(scanPlayer.clip);
     }
 
     private Vector2 GetCurrentForward()

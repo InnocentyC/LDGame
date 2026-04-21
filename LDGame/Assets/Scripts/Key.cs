@@ -21,6 +21,8 @@ public class Key : MonoBehaviour, IInteractable
     public string InteractionPrompt => $"[F] 拾取 {keyId}";
     public bool CanInteract() => !isCollected;
 
+    public AudioSource PickEyePlayer;
+
     public void Interact()
     {
         if (isCollected) return;
@@ -32,6 +34,9 @@ public class Key : MonoBehaviour, IInteractable
 
         // 通知玩家获得钥匙
         PlayerInteraction.Instance?.OnKeyCollected(this);
+
+        if (PickEyePlayer != null && PickEyePlayer.clip != null)
+            PickEyePlayer.PlayOneShot(PickEyePlayer.clip);
 
         Destroy(gameObject);
     }

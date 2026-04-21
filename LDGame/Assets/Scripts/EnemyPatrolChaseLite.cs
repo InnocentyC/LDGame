@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 [RequireComponent(typeof(Rigidbody2D))]
 public class EnemyPatrolChaseLite : MonoBehaviour
@@ -42,6 +43,8 @@ public class EnemyPatrolChaseLite : MonoBehaviour
     public int raycastBufferSize = 8;
 
     public State currentState = State.Patrol;
+
+    public AudioSource GameOverPlayer;
 
     private List<Transform> patrolPoints = new List<Transform>();
     private int patrolIndex = 0;
@@ -401,4 +404,13 @@ public class EnemyPatrolChaseLite : MonoBehaviour
             Gizmos.DrawSphere(lastSeenPlayerPos, 0.12f);
         }
     }
+
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (!collision.collider.CompareTag("Player")) return;
+        if (GameOverPlayer != null && GameOverPlayer.clip != null)
+            GameOverPlayer.PlayOneShot(GameOverPlayer.clip);
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+    }
+
 }

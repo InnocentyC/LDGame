@@ -132,6 +132,7 @@ public class PlayerInteraction : MonoBehaviour
     public void OnKeyCollected(Key key)
     {
         collectedKeys.Add(key.keyId);
+        KeyUI.Instance?.ShowKey(key.keyId);
 
         if (debugMode)
             Debug.Log($"[PlayerInteraction] 获得钥匙: {key.keyId} (已收集: {collectedKeys.Count})", this);

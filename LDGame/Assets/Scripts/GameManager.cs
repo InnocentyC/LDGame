@@ -9,6 +9,7 @@ public class GameManager : MonoBehaviour
     public static GameManager Instance { get; private set; }
 
     [Header("场景名称")]
+    public string level0SceneName = "Level0";
     public string level1SceneName = "Level1";
     public string level2SceneName = "Level2";
 
@@ -100,6 +101,16 @@ public class GameManager : MonoBehaviour
     {
         LoadLevel1();
     }
+
+
+    /// <summary>
+    /// 加载教学关
+    /// </summary>
+    public void LoadLevel0()
+    {
+        LoadScene(level0SceneName);
+    }
+
 
     /// <summary>
     /// 加载第一关

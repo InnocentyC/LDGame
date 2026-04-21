@@ -48,7 +48,7 @@ public class Door : MonoBehaviour, IInteractable
     public Image sceneFadeMask;
 
     [Tooltip("黑幕渐暗时长（秒）")]
-    public float sceneFadeDuration = 1.2f;
+    public float sceneFadeDuration = 3f;
 
     [Tooltip("完全变黑后，切场景前额外等待时间（秒）")]
     public float sceneLoadDelay = 0.2f;
@@ -66,6 +66,9 @@ public class Door : MonoBehaviour, IInteractable
     private bool isFading = false;
     private bool isTransitioning = false;
     private Color originalColor;
+
+    public AudioSource UnlockDoorPlayer;
+    public AudioSource DoorIsLockedPlayer;
 
     public string InteractionPrompt
     {
@@ -150,6 +153,8 @@ public class Door : MonoBehaviour, IInteractable
         }
         else
         {
+            if (DoorIsLockedPlayer != null && DoorIsLockedPlayer.clip != null)
+                DoorIsLockedPlayer.PlayOneShot(DoorIsLockedPlayer.clip);
             if (debugMode)
                 Debug.Log($"[Door] {name} 需要钥匙: {requiredKeyId}", this);
         }
@@ -164,6 +169,7 @@ public class Door : MonoBehaviour, IInteractable
 
         isOpen = true;
         UpdateVisual();
+        KeyUI.Instance?.HideAll();
 
         GameEvents.OnDoorOpened?.Invoke(this);
 
@@ -175,7 +181,10 @@ public class Door : MonoBehaviour, IInteractable
         {
             StartVictoryTransition();
         }
-    }
+
+        if (UnlockDoorPlayer != null && UnlockDoorPlayer.clip != null)
+            UnlockDoorPlayer.PlayOneShot(UnlockDoorPlayer.clip);
+}
 
     private void StartFadeOut()
     {
